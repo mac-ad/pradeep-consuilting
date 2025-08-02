@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String?
+  email    String?  @unique
+  password String?
+  role     Role     @default(admin)
+  blogs    Blog[]
+}
+
+enum Role {
+  admin
+  user
+  staff
+}
+
+
+  enum UniversityCountry {
+  INDIA
+  USA
+  UK
+  AUSTRALIA
+  CANADA
+  FRANCE
+  GERMANY
+  JAPAN
+  CHINA
+  NEWZEALAND
+}
+
+
+
+
+
+model Blog {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  slug           String   @unique
+  content        String
+  image          String?
+  author         User?    @relation(fields: [authorId], references: [id])
+  authorId       String?   @db.ObjectId
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  metaTitle      String?
+  metaDescription String?
+  seoData        Json?
+
+}
+
+
+
+model University {
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  university_name    String
+  university_image   String
+  university_about   String
+  university_address String
+  university_country UniversityCountry
+  available_programs AvailableProgram[] // one-to-many
+}
+
+model AvailableProgram {
+  id             String             @id @default(auto()) @map("_id") @db.ObjectId
+  program_name   String
+  duration       String
+  degree_type    String
+  department     String?
+  description    String?
+
+  universityId   String @db.ObjectId
+  university     University         @relation(fields: [universityId], references: [id])
+
+  entry_requirements EntryRequirement[] // one-to-many
+}
+
+model EntryRequirement {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  criteria   String
+  details    String
+
+  programId       String @db.ObjectId
+  program         AvailableProgram @relation(fields: [programId], references: [id])
+}
+
+model Event {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  event_title    String
+  event_date     DateTime
+  event_time     String
+  event_location String
+  event_details  String
+  event_image    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+
+model Appointment {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  email            String
+  phone            String
+  city             String
+  street           String
+  branch           String
+  date             String     // Consider changing to DateTime if you want
+  time             String
+  stripeSessionId  String     @unique
+  paymentAmount    Int        @default(12)
+  paymentStatus    String     @default("unpaid")  
+  appointment_status String   @default("pending") // ✅ New field
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+
+
+
+
+
+
