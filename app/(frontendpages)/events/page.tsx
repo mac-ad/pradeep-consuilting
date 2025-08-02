@@ -3,43 +3,45 @@ import { EventFormData } from "@/app/types/event";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaCalendar, FaMapMarkerAlt, FaClock } from "react-icons/fa";
+import { useClient } from "@/hooks/use-client";
 
 
 const Events = () => {
-  const[events,setEvents]=useState<EventFormData[] | []>([]);
-  const[expiredEvents,setExpiredEvents]=useState<EventFormData[] | []>([]);
+  const [events, setEvents] = useState<EventFormData[] | []>([]);
+  const [expiredEvents, setExpiredEvents] = useState<EventFormData[] | []>([]);
+  const isClient = useClient();
 
 
-  useEffect(()=>{
-   const fetchEvents=async()=>{
-     try{
-        const response=await fetch('/api/event?not_expired=true');
-        if(response.ok){
-          const data=await response.json();
-          console.log("events: ",data);
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch('/api/event?not_expired=true');
+        if (response.ok) {
+          const data = await response.json();
+          console.log("events: ", data);
           setEvents(data);
         }
-    
-     }catch(error){
-      console.log("error while fetching unexpired events: ",error);
-     }
-   }
-   const fetchExpiredEvents=async()=>{
-    try{
-     const response=await fetch('/api/event?expired=true');
-     if(response.ok){
-      const data=await response.json();
-      setExpiredEvents(data);
-     }
-    }catch(error){
-  console.log("error while fetching expired events: ",error);
+
+      } catch (error) {
+        console.log("error while fetching unexpired events: ", error);
+      }
     }
-   }
-   fetchEvents();
-   fetchExpiredEvents();
-  },[]);
+    const fetchExpiredEvents = async () => {
+      try {
+        const response = await fetch('/api/event?expired=true');
+        if (response.ok) {
+          const data = await response.json();
+          setExpiredEvents(data);
+        }
+      } catch (error) {
+        console.log("error while fetching expired events: ", error);
+      }
+    }
+    fetchEvents();
+    fetchExpiredEvents();
+  }, []);
   return (
     <div className="w-full py-10">
       <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-10">
@@ -88,9 +90,8 @@ const Events = () => {
           {events.map((event, index) => (
             <div
               key={index}
-              className={`p-2 py-4 sm:p-3 lg:p-10 flex flex-col ${
-                index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-              } justify-between items-center gap-6 md:gap-10 border-b`}
+              className={`p-2 py-4 sm:p-3 lg:p-10 flex flex-col ${index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+                } justify-between items-center gap-6 md:gap-10 border-b`}
             >
               <motion.div
                 variants={{
@@ -158,15 +159,15 @@ const Events = () => {
                 >
                   <div className="flex items-center gap-2">
                     <FaCalendar />
-                    <span>{new Date(event.event_date).toLocaleDateString('en-CA')}</span>
+                    <span>{isClient ? new Date(event.event_date).toLocaleDateString('en-CA') : event.event_date}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FaClock />
-                    <span>{new Date(`1970-01-01T${event?.event_time}`).toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })}</span>
+                    <span>{isClient ? new Date(`1970-01-01T${event?.event_time}`).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    }) : event?.event_time}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FaMapMarkerAlt />
@@ -212,13 +213,13 @@ const Events = () => {
                   }}
                 >
                   {/* <button className="hidden md:block px-6 py-2.5 rounded-md text-sm font-semibold  border-2 border-primary/60 text-primary cursor-pointer relative overflow-hidden group"> */}
-                    {/* <Link
+                  {/* <Link
                       href={event.registrationLink}
                       className="relative z-10 transition-colors duration-300 group-hover:text-white"
                     >
                       Register Now
                     </Link> */}
-                    {/* <span className="absolute inset-0 z-0 w-0 h-full transition-all duration-300 bg-gradient-to-r from-[#3D03FA] to-secondary  left-0 group-hover:w-full"></span>
+                  {/* <span className="absolute inset-0 z-0 w-0 h-full transition-all duration-300 bg-gradient-to-r from-[#3D03FA] to-secondary  left-0 group-hover:w-full"></span>
                   </button> */}
                 </motion.div>
               </div>
@@ -265,11 +266,11 @@ const Events = () => {
                     </h3>
                     <p className="text-xs text-gray-500 flex gap-x-2 items-center">
                       <FaCalendar />
-                      {new Date(event?.event_date).toLocaleDateString('en-CA')} — {new Date(`1970-01-01T${event?.event_time}`).toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })}
+                      {isClient ? `${new Date(event?.event_date).toLocaleDateString('en-CA')} — ${new Date(`1970-01-01T${event?.event_time}`).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}` : `${event?.event_date} — ${event?.event_time}`}
                     </p>
                     <p className="text-xs text-secondary flex gap-x-2 items-center">
                       <FaClock />

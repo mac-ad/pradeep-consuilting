@@ -20,6 +20,7 @@ import { AppointmentFormSchema } from "@/schemas/appointment";
 import { z } from "zod";
 import { toast } from "sonner";
 import { AppointmentData } from "@/app/types/appointment";
+import { useClient } from "@/hooks/use-client";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -30,55 +31,59 @@ type AppointmentFormValues = z.infer<typeof AppointmentFormSchema>;
 
 
 const Appointment = () => {
-  const[loadingAppointments,setLoadingAppointments]=useState(false);
-  const[bookedDates,setBookedDates]=useState<Date[]>([]);
-  const[userAppointments,setUserAppointments]=useState<AppointmentData[]>([]);
-    console.log("userAppointments: ",userAppointments);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const [userAppointments, setUserAppointments] = useState<AppointmentData[]>([]);
+  const isClient = useClient();
+  console.log("userAppointments: ", userAppointments);
+
   useEffect(() => {
-  const fetchClientBookings = async () => {
-    try {
-      const storedSessions = JSON.parse(localStorage.getItem("appointmentSessions") || "[]");
-      if (!storedSessions || storedSessions.length === 0) return;
-      
-      setLoadingAppointments(true);
+    if (!isClient) return;
 
-      const bookings = await Promise.all(
-        storedSessions.map(async (id: string) => {
-          const res = await fetch(`/api/appointment?id=${id}`);
-          if (res.ok) return await res.json();
-          return null;
-        })
-      );
+    const fetchClientBookings = async () => {
+      try {
+        const storedSessions = JSON.parse(localStorage.getItem("appointmentSessions") || "[]");
+        if (!storedSessions || storedSessions.length === 0) return;
 
-      const validBookings = bookings.filter(Boolean);
-      setUserAppointments(validBookings);
-    } catch (error) {
-      console.log("Error fetching the booking dates: ", error);
-    } finally {
-      setLoadingAppointments(false);
-    }
-  };
+        setLoadingAppointments(true);
 
-  fetchClientBookings();
-}, []);
+        const bookings = await Promise.all(
+          storedSessions.map(async (id: string) => {
+            const res = await fetch(`/api/appointment?id=${id}`);
+            if (res.ok) return await res.json();
+            return null;
+          })
+        );
 
-   useEffect(()=>{
-     const fetchBookedDates=async()=>{ 
-        try{
-          const dateResponse=await fetch('/api/appointment?booking_dates=true');
-          if(!dateResponse.ok){
-            throw new Error("Faild to fetch booked dates..");
-          }
-          const data=await dateResponse.json();
-          const parsedDates=data.map((dateStr:string)=>new Date(dateStr));
-          setBookedDates(parsedDates);
-            console.log("booked dates response: ",data)
-        }catch(error){
-           console.log("error fetching booked dates: ",error);
+        const validBookings = bookings.filter(Boolean);
+        setUserAppointments(validBookings);
+      } catch (error) {
+        console.log("Error fetching the booking dates: ", error);
+      } finally {
+        setLoadingAppointments(false);
+      }
+    };
+
+    fetchClientBookings();
+  }, [isClient]);
+
+  useEffect(() => {
+    const fetchBookedDates = async () => {
+      try {
+        const dateResponse = await fetch('/api/appointment?booking_dates=true');
+        if (!dateResponse.ok) {
+          throw new Error("Faild to fetch booked dates..");
         }
-     }
-     fetchBookedDates();
-  },[])
+        const data = await dateResponse.json();
+        const parsedDates = data.map((dateStr: string) => new Date(dateStr));
+        setBookedDates(parsedDates);
+        console.log("booked dates response: ", data)
+      } catch (error) {
+        console.log("error fetching booked dates: ", error);
+      }
+    }
+    fetchBookedDates();
+  }, [])
   const form = useForm<AppointmentFormValues>({
     defaultValues: {
       name: "",
@@ -93,38 +98,38 @@ const Appointment = () => {
   });
 
   const onSubmit = async (data: AppointmentFormValues) => {
-   
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if(!res.ok){
-        const checkOutData=await res.json();
+      if (!res.ok) {
+        const checkOutData = await res.json();
         throw new Error(checkOutData.message);
       }
       const resData = await res.json();
-      const appointmentResponse=await fetch("/api/appointment",{
-        method:"POST",
-        headers:{
+      const appointmentResponse = await fetch("/api/appointment", {
+        method: "POST",
+        headers: {
           'Content-Type': 'application/json',
         },
-        body:JSON.stringify(resData)
+        body: JSON.stringify(resData)
 
       });
 
-      if(!appointmentResponse.ok){
-        const appData=await appointmentResponse.json();
-        console.log("response data: ",appData);
+      if (!appointmentResponse.ok) {
+        const appData = await appointmentResponse.json();
+        console.log("response data: ", appData);
         throw new Error(appData.message)
       }
       const stripe = await stripePromise;
       stripe?.redirectToCheckout({ sessionId: resData.session_id });
     } catch (error) {
-      if(error instanceof Error){
+      if (error instanceof Error) {
         toast.error(error.message);
-      }else{
+      } else {
         toast.error("Something went wrong");
       }
     }
@@ -303,47 +308,47 @@ const Appointment = () => {
             </Form>
           </div>
         </div>
-      
-
-<div className="mt-10 max-w-4xl mx-auto">
-  <h2 className="text-xl font-semibold mb-4">Your Booked Appointments</h2>
-
-  {loadingAppointments ? (
-    <p>Loading your appointments...</p>
-  ) : userAppointments.length === 0 ? (
-    <p>You have no booked appointments yet.</p>
-  ) : (
-    <div className="overflow-x-auto">
-      <table className="min-w-full border border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 border">Date</th>
-            <th className="px-4 py-2 border">Time</th>
-            <th className="px-4 py-2 border">Branch</th>
-            <th className="px-4 py-2 border">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {userAppointments.map((appt) => {
-
-            return (
-              <tr key={appt.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 border">{appt.date}</td>
-                <td className="px-4 py-2 border">{appt.time}</td>
-                <td className="px-4 py-2 border">{appt.branch}</td>
-                <td className="px-4 py-2 border">{appt.paymentStatus}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
 
 
+        <div className="mt-10 max-w-4xl mx-auto">
+          <h2 className="text-xl font-semibold mb-4">Your Booked Appointments</h2>
 
-{/* <div className="mt-10 max-w-lg mx-auto">
+          {loadingAppointments ? (
+            <p>Loading your appointments...</p>
+          ) : userAppointments.length === 0 ? (
+            <p>You have no booked appointments yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-300">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 border">Date</th>
+                    <th className="px-4 py-2 border">Time</th>
+                    <th className="px-4 py-2 border">Branch</th>
+                    <th className="px-4 py-2 border">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userAppointments.map((appt) => {
+
+                    return (
+                      <tr key={appt.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border">{appt.date}</td>
+                        <td className="px-4 py-2 border">{appt.time}</td>
+                        <td className="px-4 py-2 border">{appt.branch}</td>
+                        <td className="px-4 py-2 border">{appt.paymentStatus}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+
+
+        {/* <div className="mt-10 max-w-lg mx-auto">
   <h2 className="text-xl font-semibold mb-4">Your Booked Appointments</h2>
   {loadingAppointments ? (
     <p>Loading your appointments...</p>

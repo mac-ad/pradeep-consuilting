@@ -3,6 +3,7 @@
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
+import { useClient } from "@/hooks/use-client";
 
 const ModalNotification = ({
   title = "Important Notice",
@@ -15,9 +16,10 @@ const ModalNotification = ({
   footerContent = null,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const isClient = useClient();
 
   useEffect(() => {
-    if (showOnLoad) {
+    if (showOnLoad && isClient) {
       const hasSeenModal = localStorage.getItem("hasSeenModal");
 
       if (!hasSeenModal) {
@@ -29,7 +31,7 @@ const ModalNotification = ({
         return () => clearTimeout(timer);
       }
     }
-  }, [delay, showOnLoad]);
+  }, [delay, showOnLoad, isClient]);
 
   const handleClose = () => {
     setIsVisible(false);

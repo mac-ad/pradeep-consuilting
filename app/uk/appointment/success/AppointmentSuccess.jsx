@@ -1,6 +1,7 @@
 "use client";
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useClient } from '@/hooks/use-client';
 
 export default function AppointmentSuccess() {
   const searchParams = useSearchParams();
@@ -8,8 +9,11 @@ export default function AppointmentSuccess() {
   const [updateToPaid, setUpdateToPaid] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const isClient = useClient();
 
   useEffect(() => {
+    if (!isClient) return;
+
     const appointmentUpdateToPaid = async () => {
       if (!sessionId) return;
 
@@ -21,13 +25,13 @@ export default function AppointmentSuccess() {
         });
 
         if (updateResponse.ok) {
-    const resData=await updateResponse.json();
-    console.log("resData: ",resData);
-    const storedSessions = JSON.parse(localStorage.getItem("appointmentSessions") || "[]");
-    if (!storedSessions.includes(resData.session_id)) {
-      storedSessions.push(resData.session_id);
-      localStorage.setItem("appointmentSessions", JSON.stringify(storedSessions));
-    }
+          const resData = await updateResponse.json();
+          console.log("resData: ", resData);
+          const storedSessions = JSON.parse(localStorage.getItem("appointmentSessions") || "[]");
+          if (!storedSessions.includes(resData.session_id)) {
+            storedSessions.push(resData.session_id);
+            localStorage.setItem("appointmentSessions", JSON.stringify(storedSessions));
+          }
 
           setUpdateToPaid(true);
         } else {
@@ -43,7 +47,7 @@ export default function AppointmentSuccess() {
     };
 
     appointmentUpdateToPaid();
-  }, [sessionId]);
+  }, [sessionId, isClient]);
 
   return (
     <div style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto" }}>
@@ -59,4 +63,3 @@ export default function AppointmentSuccess() {
     </div>
   );
 }
- 

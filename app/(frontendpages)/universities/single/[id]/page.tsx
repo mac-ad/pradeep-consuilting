@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { University } from "../../page";
 import { EventFormData } from "@/app/types/event";
+import { useClient } from "@/hooks/use-client";
 const tabs = [
   { id: "about", label: "About University" },
   { id: "courses", label: "Available Courses/Programs" },
@@ -14,6 +15,7 @@ const UniversityPage = () => {
   const [activeTab, setActiveTab] = useState("about");
   const [university, setUniversity] = useState<University | null>(null);
   const [events, setEvents] = useState<EventFormData[] | []>([]);
+  const isClient = useClient();
   useEffect(() => {
     const fetchSingleUniversity = async () => {
       try {
@@ -169,11 +171,11 @@ const UniversityPage = () => {
             </h2>
             <span className="font-medium text-base">
               Happening at:{" "}
-              {new Date(events[0].event_date).toLocaleDateString("en-GB", {
+              {isClient ? new Date(events[0].event_date).toLocaleDateString("en-GB", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
-              })}
+              }) : events[0].event_date}
             </span>
           </div>
         )}

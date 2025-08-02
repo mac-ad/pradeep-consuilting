@@ -30,7 +30,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased suppressHydrationWarning `}
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
       <head>
         <link rel="icon" href="/ample-logo.svg" type="image/png" />

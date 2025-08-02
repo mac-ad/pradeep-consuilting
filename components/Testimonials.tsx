@@ -10,6 +10,8 @@ import { motion } from "motion/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import { GoArrowLeft, GoArrowRight } from "react-icons/go";
+import "swiper/css/autoplay";
+import { useClient } from "@/hooks/use-client";
 
 const testimonials = [
   {
@@ -52,6 +54,7 @@ const testimonials = [
 
 const Testimonials: React.FC = () => {
   const swiperRef = useRef<SwiperType | null>(null);
+  const isClient = useClient();
 
   return (
     <div id="testimonials" className="w-full py-10">
@@ -136,11 +139,11 @@ const Testimonials: React.FC = () => {
                     {testi.name}
                   </h4>
                   <span className="text-sm md:text-base text-gray-600">
-                    {new Date(testi.date).toLocaleDateString("en-US", {
+                    {isClient ? new Date(testi.date).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
-                    })}
+                    }) : testi.date}
                   </span>
                   <p className="font-times-new-roman text-center text-sm md:text-base">
                     {testi.message}

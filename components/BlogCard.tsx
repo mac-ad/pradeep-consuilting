@@ -1,7 +1,9 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { IoChevronForwardSharp } from "react-icons/io5";
+import { useClient } from "@/hooks/use-client";
 // import HtmlContent from "./htmlcontentloader";
 // import { htmlToText } from 'html-to-text';
 
@@ -15,6 +17,8 @@ interface BlogTypes {
 }
 
 const BlogCard = ({ blog }: { blog: BlogTypes }) => {
+  const isClient = useClient();
+  
   return (
     <div className="flex flex-col border border-primary rounded-xl overflow-hidden">
       <Image
@@ -30,11 +34,11 @@ const BlogCard = ({ blog }: { blog: BlogTypes }) => {
             <Link href={`/blogs/${blog.slug}`}>{blog.title}</Link>
           </h1>
           <span className="text-xs text-gray-500">
-             {new Date(blog.createdAt).toLocaleDateString("en-US", {
+             {isClient ? new Date(blog.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
-  })}
+  }) : blog.createdAt}
           </span>
         </div>
         <span className="text-black/80" >

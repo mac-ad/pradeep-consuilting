@@ -1,11 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FaChevronUp } from "react-icons/fa";
+import { useClient } from "@/hooks/use-client";
 
 const BackToTopButton = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const isClient = useClient();
+  
   const toggleVisibility = () => {
-    if (window.scrollY > 300) {
+    if (typeof window !== 'undefined' && window.scrollY > 300) {
       setIsVisible(true);
     } else {
       setIsVisible(false);
@@ -13,19 +16,23 @@ const BackToTopButton = () => {
   };
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
+    if (!isClient) return;
+    
     window.addEventListener("scroll", toggleVisibility);
 
     return () => {
       window.removeEventListener("scroll", toggleVisibility);
     };
-  }, []);
+  }, [isClient]);
 
   return (
     <>
