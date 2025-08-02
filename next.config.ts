@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
-  ssr: false,
   /* config options here */
   logging: {
     fetches: {
